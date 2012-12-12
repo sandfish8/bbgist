@@ -1,13 +1,7 @@
 require 'sinatra'
 require 'netaddr'
 require 'cgi'
-
-class Array
-  def del_in_place(value)
-    delete(value)
-    self
-  end
-end
+require_relative 'lib/array'
 
 class Bbgist < Sinatra::Base
 
@@ -23,10 +17,6 @@ class Bbgist < Sinatra::Base
 
   USERNAME = "bbgist"
   PASSWORD = "rumor1:newts"
-
-  # before do
-  #   authenticate
-  # end
 
   configure do
     enable :sessions
@@ -47,13 +37,6 @@ class Bbgist < Sinatra::Base
     end
   end
 
-  # def authenticate
-  #   #if !trusted_ip
-  #   if true
-  #     erb :login
-  #   end
-  # end
-
   get '/login' do
     @login_failed = params.key?("login_failed")
     erb :login
@@ -72,27 +55,10 @@ class Bbgist < Sinatra::Base
 
     if username != USERNAME || password != PASSWORD
       redirect '/login?login_failed', 303 # see comment below
-      # status, headers, body = call env.merge("PATH_INFO" => '/login')
-      # [status, headers, body]
     else
-      # start session send them to /
+      # mark session valid and send them to /
       session["authorized"] = true
       redirect '/', 303 # http://www.gittr.com/index.php/archive/details-of-sinatras-redirect-helper/
-    end
-  end
-
-  def trusted_ip?
-    TRUSTED_NETWORKS.each do |n|
-      if NetAddr::CIDR.create(n).contains?(request.ip)
-        return true
-      end
-    end
-    false
-  end
-
-  def get_mtimes(entries)
-    entries.map do |e|
-      [ e, File.mtime(path(UPLOAD_DIR, e)) ]
     end
   end
 
@@ -119,6 +85,21 @@ class Bbgist < Sinatra::Base
     end
 
     return "#{SERVER}/#{name}\n"
+  end
+
+  def trusted_ip?
+    TRUSTED_NETWORKS.each do |n|
+      if NetAddr::CIDR.create(n).contains?(request.ip)
+        return true
+      end
+    end
+    false
+  end
+
+  def get_mtimes(entries)
+    entries.map do |e|
+      [ e, File.mtime(path(UPLOAD_DIR, e)) ]
+    end
   end
 
   def path(dir, name = nil)
