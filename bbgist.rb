@@ -18,14 +18,9 @@ class Bbgist < Sinatra::Base
   USERNAME = "bbgist"
   PASSWORD = "rumor1:newts"
 
-  configure do
-    enable :sessions
-    set :session_secret, "big_secret"
-  end
-
   # show all files
   get '/' do
-    if !session["authorized"] && !trusted_ip?
+    if !request.cookies.key?("authorized") && !trusted_ip?
       status, headers, body = call env.merge("PATH_INFO" => '/login')
       [status, headers, body]
     else
@@ -43,7 +38,7 @@ class Bbgist < Sinatra::Base
   end
 
   get '/logout' do
-    session["authorized"] = false
+    response.delete_cookie('authorized')
     redirect '/'
   end
 
@@ -56,8 +51,7 @@ class Bbgist < Sinatra::Base
     if username != USERNAME || password != PASSWORD
       redirect '/login?login_failed', 303 # see comment below
     else
-      # mark session valid and send them to /
-      session["authorized"] = true
+      response.set_cookie('authorized', :value => true, :expires => Time.now + 3600*24*365*10 ) # expires in 10 years
       redirect '/', 303 # http://www.gittr.com/index.php/archive/details-of-sinatras-redirect-helper/
     end
   end
