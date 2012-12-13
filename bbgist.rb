@@ -20,23 +20,10 @@ class Bbgist < Sinatra::Base
 
   # show all files
   get '/' do
-    if !request.cookies.key?("authorized") && !trusted_ip?
-      status, headers, body = call env.merge("PATH_INFO" => '/login')
-      [status, headers, body]
-    else
+    authorized do
       content_type :text
       ordered_entries.map { |e| "#{e.first}\t#{e.last.strftime('%Y-%m-%d %H:%M:%S')}" }.join("\n") + "\n"
     end
-  end
-
-  def ordered_entries
-    entries = Dir.entries(path(UPLOAD_DIR)).del_in_place(".").del_in_place("..")
-    entries_with_mtime = get_mtimes(entries)
-    entries_with_mtime.sort! { |a,b| b.last <=> a.last }
-  end
-
-  def get_first_entry
-    ordered_entries.first.first
   end
 
   get '/login' do
@@ -65,28 +52,43 @@ class Bbgist < Sinatra::Base
 
   # show a file
   get '/:name' do |name|
-    content_type :text
-    return usage if name == "help"
-    name = get_first_entry if name == "first"
-    begin
-      File.open(path(UPLOAD_DIR, name), 'r') do |file|
-        file.read
+    authorized do
+      content_type :text
+      return usage if name == "help"
+      name = get_first_entry if name == "first"
+      begin
+        File.open(path(UPLOAD_DIR, name), 'r') do |file|
+          file.read
+        end
+      rescue Errno::ENOENT
+        "No file #{name}\n"
       end
-    rescue Errno::ENOENT
-      "No file #{name}\n"
     end
   end
 
   # recieve a text upload
   post "/" do
+    authorized do
+      name = rand_alpha_chars(ID_LENGTH)
 
-    name = rand_alpha_chars(ID_LENGTH)
+      File.open(path(UPLOAD_DIR, name), "w") do |f|
+        f.write(params[:file][:tempfile].read)
+      end
 
-    File.open(path(UPLOAD_DIR, name), "w") do |f|
-      f.write(params[:file][:tempfile].read)
+      return "#{SERVER}/#{name}\n"
     end
+  end
 
-    return "#{SERVER}/#{name}\n"
+  def authorized(&block)
+    if not_authorized?
+      redirect '/login'
+    else
+      block.call
+    end
+  end
+
+  def not_authorized?
+    !request.cookies.key?("authorized") && !trusted_ip?
   end
 
   def trusted_ip?
@@ -96,6 +98,16 @@ class Bbgist < Sinatra::Base
       end
     end
     false
+  end
+
+  def ordered_entries
+    entries = Dir.entries(path(UPLOAD_DIR)).del_in_place(".").del_in_place("..")
+    entries_with_mtime = get_mtimes(entries)
+    entries_with_mtime.sort! { |a,b| b.last <=> a.last }
+  end
+
+  def get_first_entry
+    ordered_entries.first.first
   end
 
   def get_mtimes(entries)
