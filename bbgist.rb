@@ -9,6 +9,7 @@ class Bbgist < Sinatra::Base
   UPLOAD_DIR = "uploads"
   ID_LENGTH = 10
 
+
   # referenced from https://thevault.blueboxgrid.com/index.php/IP_Space_Allocation
   TRUSTED_NETWORKS = ["208.85.144.0/21",
                       "67.214.208.0/20",
