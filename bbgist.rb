@@ -25,11 +25,18 @@ class Bbgist < Sinatra::Base
       [status, headers, body]
     else
       content_type :text
-      entries = Dir.entries(path(UPLOAD_DIR)).del_in_place(".").del_in_place("..")
-      entries_with_mtime = get_mtimes(entries)
-      entries_with_mtime.sort! { |a,b| b.last <=> a.last }
-      entries_with_mtime.map { |e| "#{e.first}\t#{e.last.strftime('%Y-%m-%d %H:%M:%S')}" }.join("\n") + "\n"
+      ordered_entries.map { |e| "#{e.first}\t#{e.last.strftime('%Y-%m-%d %H:%M:%S')}" }.join("\n") + "\n"
     end
+  end
+
+  def ordered_entries
+    entries = Dir.entries(path(UPLOAD_DIR)).del_in_place(".").del_in_place("..")
+    entries_with_mtime = get_mtimes(entries)
+    entries_with_mtime.sort! { |a,b| b.last <=> a.last }
+  end
+
+  def get_first_entry
+    ordered_entries.first.first
   end
 
   get '/login' do
@@ -60,6 +67,7 @@ class Bbgist < Sinatra::Base
   get '/:name' do |name|
     content_type :text
     return usage if name == "help"
+    name = get_first_entry if name == "first"
     begin
       File.open(path(UPLOAD_DIR, name), 'r') do |file|
         file.read
