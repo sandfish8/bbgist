@@ -22,8 +22,8 @@ class Bbgist < Sinatra::Base
   # show all files
   get '/' do
     authorized do
-      content_type :text
-      ordered_entries.map { |e| "#{e.first}\t#{e.last.strftime('%Y-%m-%d %H:%M:%S')}" }.join("\n") + "\n"
+      @entries = ordered_entries
+      erb :index
     end
   end
 
@@ -52,15 +52,29 @@ class Bbgist < Sinatra::Base
   end
 
   # show a file
-  get '/:name' do |name|
+  get '/get' do
     authorized do
-      content_type :text
+    content_type :text
+      name = params[:name]
       return usage if name == "help"
       name = get_first_entry if name == "first"
       begin
         File.open(path(UPLOAD_DIR, name), 'r') do |file|
           file.read
         end
+      rescue Errno::ENOENT
+        "No file #{name}\n"
+      end
+    end
+  end
+
+  # download a file
+  get '/dl' do
+    authorized do
+      name = params[:name]
+      name = get_first_entry if name == "first"
+      begin
+        send_file path(UPLOAD_DIR, name), :filename => name, :type => 'Application/octet-stream'
       rescue Errno::ENOENT
         "No file #{name}\n"
       end
@@ -104,16 +118,19 @@ class Bbgist < Sinatra::Base
   def ordered_entries
     entries = Dir.entries(path(UPLOAD_DIR)).del_in_place(".").del_in_place("..")
     entries_with_mtime = get_mtimes(entries)
-    entries_with_mtime.sort! { |a,b| b.last <=> a.last }
+    entries_with_mtime.sort! { |a,b| b[:mtime] <=> a[:mtime] }
   end
 
   def get_first_entry
-    ordered_entries.first.first
+    ordered_entries.first[:name]
   end
 
   def get_mtimes(entries)
     entries.map do |e|
-      [ e, File.mtime(path(UPLOAD_DIR, e)) ]
+      { :name => e,
+        :mtime => File.mtime(path(UPLOAD_DIR, e)),
+        :size => File.size(path(UPLOAD_DIR, e))
+      }
     end
   end
 
