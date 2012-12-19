@@ -94,7 +94,7 @@ class Bbgist < Sinatra::Base
           File.open(path(UPLOAD_DIR, name), "w") do |f|
             f.write(params[:file][:tempfile].read)
           end
-          "#{SERVER}/#{name}\n"
+          "#{SERVER}/get?name=#{name}\n"
         else
           "Error: no file to upload"
         end
