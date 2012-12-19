@@ -56,7 +56,6 @@ class Bbgist < Sinatra::Base
     authorized do
     content_type :text
       name = params[:name]
-      return usage if name == "help"
       name = get_first_entry if name == "first"
       begin
         File.open(path(UPLOAD_DIR, name), 'r') do |file|
@@ -121,7 +120,7 @@ class Bbgist < Sinatra::Base
   end
 
   get '/help' do
-    redirect '/get?name=help'
+    usage
   end
 
   get '/first' do
