@@ -120,6 +120,14 @@ class Bbgist < Sinatra::Base
     end
   end
 
+  get '/help' do
+    redirect '/get?name=help'
+  end
+
+  get '/first' do
+    redirect '/get?name=first'
+  end
+
   def authorized(&block)
     if not_authorized?
       redirect '/login'
