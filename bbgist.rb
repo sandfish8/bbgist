@@ -81,16 +81,42 @@ class Bbgist < Sinatra::Base
     end
   end
 
-  # recieve a text upload
+  # add or remove a file
   post "/" do
     authorized do
-      name = rand_alpha_chars(ID_LENGTH)
-
-      File.open(path(UPLOAD_DIR, name), "w") do |f|
-        f.write(params[:file][:tempfile].read)
+      if params[:_method] == "delete"
+        name = params[:name]
+        FileUtils.rm(path(UPLOAD_DIR, name))
+        "#{name} removed."
+      else
+        if params[:file]
+          name = rand_alpha_chars(ID_LENGTH)
+          File.open(path(UPLOAD_DIR, name), "w") do |f|
+            f.write(params[:file][:tempfile].read)
+          end
+          "#{SERVER}/#{name}\n"
+        else
+          "Error: no file to upload"
+        end
       end
+    end
+  end
 
-      return "#{SERVER}/#{name}\n"
+  # delete a file
+  delete "/:name" do |name|
+    FileUtils.rm(path(UPLOAD_DIR, name))
+    redirect "/"
+  end
+
+  # recieve a text upload
+  post "/web_upload" do
+    authorized do
+      name = rand_alpha_chars(ID_LENGTH)
+      if params[:file]
+        tempfile = params[:file][:tempfile]
+        FileUtils.cp(tempfile.path, path(UPLOAD_DIR, name))
+      end
+      redirect '/'
     end
   end
 
