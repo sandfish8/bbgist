@@ -176,7 +176,7 @@ class Bbgist < Sinatra::Base
   end
 
   def usage
-    "curl -F file=@FILE_NAME #{SERVER}\n"
+    "curl -k -F file=@FILE_NAME #{SERVER}\n"
   end
 
 end
