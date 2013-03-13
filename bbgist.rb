@@ -5,7 +5,7 @@ require_relative 'lib/array'
 
 class Bbgist < Sinatra::Base
 
-  SERVER = "http://bbgist.blueboxgrid.com"
+  SERVER = "https://bbgist.blueboxgrid.com"
   UPLOAD_DIR = "uploads"
   ID_LENGTH = 10
 
