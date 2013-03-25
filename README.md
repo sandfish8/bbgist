@@ -26,7 +26,9 @@ Why bbgist?
 scp to/from a remote host can be a real PITA when it's behind a bastion host. <br />
 I've had to create users on these hosts just to do a scp.  This feels like a security anti-pattern. <br />
 
-== Access Restrictions ==
+Access Restrictions
+-------------------
+
 only hosts on bluebox network can hit bbgist without authenticating<br />
 When you access https://bbgist.blueboxgrid.com from your workstation you will need to authenticate.  The password is on the Boxpanel PW page.<br />
 (would like to get our openID solution working with this for single signon)<br />
@@ -37,17 +39,17 @@ ACLs ?
 -------
 There are none.  So every text file that's been uploaded to bbgist is open for READing and DELETEing for all Bluebox folks.<br />
 
-  Help
-  ----
-If you forget the syntax to use bbgist you can issue this to get an example:
+Help
+------
+If you forget the syntax to use bbgist you can issue this to get an example
 ```bash
 curl https://bbgist.blueboxgrid.com/help
-``
+```
 
 bbgist will only accept unauthenticated connections from servers on the Bluebox network.  So you cna
 
- Binaries?
- ---------
+Binaries?
+---------
 You can also push binaries to bbgist.   Not sure what the size limits will be here so MMV.
 To download a binary use the 'download' link on the bbgist webpage.
 
